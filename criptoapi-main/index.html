@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="es" data-bs-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Cryptos - Práctica Funcional</title>
+
+  <!-- Bootstrap -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+  <style>
+    body { background: #0f1724; color: #e6eef8; }
+    .card { background: #0b1220; border: 1px solid rgba(255,255,255,0.04); }
+    .muted { color: #9aa6bd; font-size: .9rem; }
+    .chart-container { height: 320px; }
+    table { background: #071029; color: #e6eef8; }
+    thead th { background: #081520; color: #cfe6ff; }
+    .small-muted { color: #9aa6bd; font-size: .85rem; }
+  </style>
+</head>
+<body>
+  <!-- NAV -->
+  <nav class="navbar navbar-expand-lg sticky-top mb-3">
+    <div class="container-fluid">
+      <a class="navbar-brand fw-bold" href="#">
+        <span style="color:#3ddc84">●</span> Crypto Dashboard
+        <small class="ms-2 text-secondary muted">CoinLore</small>
+      </a>
+
+      <div class="d-flex gap-2">
+        <button id="btnReload" class="btn btn-sm btn-outline-light">Recargar datos</button>
+      </div>
+    </div>
+  </nav>
+
+  <main class="container my-3">
+    <!-- Estadísticas (total exchanges / avg price / most expensive) -->
+    <div class="row g-3 mb-3">
+      <div class="col-12 col-md-4">
+        <div class="card p-3">
+          <h6 class="mb-1">Total casas de cambio</h6>
+          <div class="d-flex justify-content-between align-items-center">
+            <h3 id="totalExchanges">—</h3>
+            <small id="lastUpdatedExchanges" class="small-muted">—</small>
+          </div>
+          <div class="small-muted mt-1">(Valor 2%)</div>
+        </div>
+      </div>
+
+      <div class="col-12 col-md-4">
+        <div class="card p-3">
+          <h6 class="mb-1">Precio medio (USD)</h6>
+          <div class="d-flex justify-content-between align-items-center">
+            <h3 id="avgPrice">—</h3>
+            <small id="lastUpdatedCoins" class="small-muted">—</small>
+          </div>
+          <div class="small-muted mt-1">(Valor 2%)</div>
+        </div>
+      </div>
+
+      <div class="col-12 col-md-4">
+        <div class="card p-3">
+          <h6 class="mb-1">Moneda más cara</h6>
+          <div class="d-flex justify-content-between align-items-center">
+            <h5 id="mostExpensive">—</h5>
+            <div id="spinMost" class="spinner-border text-light spinner-border-sm d-none" role="status"></div>
+          </div>
+          <div class="small-muted mt-1">(Valor 2%)</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Graficas -->
+    <div class="row g-3 mb-4">
+      <div class="col-12 col-lg-6">
+        <div class="card p-3">
+          <div class="d-flex justify-content-between">
+            <h6 class="mb-0">Top 10 Monedas (Market Cap)</h6>
+            <small class="small-muted">Top 10 — Valor 5%</small>
+          </div>
+          <div class="chart-container mt-3">
+            <canvas id="chartCoin"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-12 col-lg-6">
+        <div class="card p-3">
+          <div class="d-flex justify-content-between">
+            <h6 class="mb-0">Top 10 Casas de Cambio (Volumen USD)</h6>
+            <small class="small-muted">Top 10 — Valor 5%</small>
+          </div>
+          <div class="chart-container mt-3">
+            <canvas id="chartExchanges"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Buscador + tablas -->
+    <div class="row g-3">
+      <div class="col-12">
+        <div class="card p-3">
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <h6 class="mb-0">Monedas — Tabla</h6>
+            <div class="d-flex gap-2">
+              <input id="searchInput" class="form-control form-control-sm" placeholder="Buscar por nombre o símbolo..." style="min-width:220px"/>
+            </div>
+          </div>
+
+          <div class="table-responsive" style="max-height:360px; overflow:auto;">
+            <table id="coinsTable" class="table table-sm table-borderless align-middle">
+              <thead>
+                <tr>
+                  <th>#</th><th>Nombre</th><th>Símbolo</th><th>Precio (USD)</th><th>Market Cap (USD)</th><th>% 24h</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+          <div class="small-muted">Imprimir en tablas — Valor 4% · Buscador por tabla — Valor 5%</div>
+        </div>
+      </div>
+
+      <div class="col-12">
+        <div class="card p-3">
+          <h6 class="mb-2">Casas de cambio — Tabla</h6>
+          <div class="table-responsive" style="max-height:220px; overflow:auto;">
+            <table id="exchangesTable" class="table table-sm table-borderless align-middle">
+              <thead>
+                <tr><th>#</th><th>Nombre</th><th>Volumen 24h (USD)</th><th>Markets</th></tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <footer class="text-center small-muted mt-4">
+      Datos proporcionados por CoinLore · Gráficas con Chart.js
+    </footer>
+  </main>
+
+  <!-- Dependencias -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+  <!-- Tu script -->
+  <script src="js/script.js"></script>
+</body>
+</html>
